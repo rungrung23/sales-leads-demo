@@ -1,226 +1,77 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
-const WHATSAPP_NUMBER = "6283822574002"; // GANTI dengan nomor WhatsApp kamu
+const WHATSAPP_NUMBER = "6283822574002";
 
-type Vehicle = {
+type Car = {
+  id: number;
   name: string;
-  type: string;
-  price: string;
-  emoji: string;
-  color: string;
+  year: number;
+  price: number;
+  mileage: string;
+  transmission: string;
+  fuel: string;
+  category: "MPV" | "City Car" | "SUV";
+  image: string;
+  badge?: string;
+  description: string;
 };
 
-const cars: Vehicle[] = [
-  { name: "Toyota Avanza", type: "MPV Keluarga", price: "Rp235 jutaan", emoji: "🚙", color: "from-sky-100 to-blue-50" },
-  { name: "Honda Brio", type: "City Car", price: "Rp170 jutaan", emoji: "🚗", color: "from-rose-100 to-orange-50" },
-  { name: "Mitsubishi Xpander", type: "MPV Premium", price: "Rp270 jutaan", emoji: "🚘", color: "from-slate-200 to-slate-50" },
+const cars: Car[] = [
+  { id: 1, name: "Toyota Avanza G", year: 2022, price: 218000000, mileage: "32.000 km", transmission: "Manual", fuel: "Bensin", category: "MPV", image: "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?auto=format&fit=crop&w=1200&q=85", badge: "Favorit keluarga", description: "MPV keluarga dengan kabin lega untuk aktivitas harian dan perjalanan luar kota." },
+  { id: 2, name: "Honda Brio Satya E", year: 2023, price: 168000000, mileage: "18.500 km", transmission: "Automatic", fuel: "Bensin", category: "City Car", image: "https://images.unsplash.com/photo-1590362891991-f776e747a5a3?auto=format&fit=crop&w=1200&q=85", badge: "Irit & praktis", description: "City car lincah untuk penggunaan harian dan berkendara di perkotaan." },
+  { id: 3, name: "Mitsubishi Xpander Ultimate", year: 2021, price: 245000000, mileage: "41.000 km", transmission: "Automatic", fuel: "Bensin", category: "MPV", image: "https://images.unsplash.com/photo-1606611013016-969c19ba27bb?auto=format&fit=crop&w=1200&q=85", description: "MPV modern dengan kabin nyaman untuk keluarga dan perjalanan bersama." },
+  { id: 4, name: "Toyota Rush TRD Sportivo", year: 2020, price: 232000000, mileage: "48.000 km", transmission: "Automatic", fuel: "Bensin", category: "SUV", image: "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&fit=crop&w=1200&q=85", badge: "SUV keluarga", description: "SUV dengan ground clearance tinggi dan ruang yang nyaman untuk keluarga." },
+  { id: 5, name: "Suzuki XL7 Alpha", year: 2022, price: 226000000, mileage: "29.000 km", transmission: "Automatic", fuel: "Bensin", category: "SUV", image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1200&q=85", description: "SUV bergaya tangguh dengan konfigurasi kabin yang fleksibel." },
+  { id: 6, name: "Toyota Innova Zenix", year: 2023, price: 398000000, mileage: "15.000 km", transmission: "Automatic", fuel: "Bensin", category: "MPV", image: "https://images.unsplash.com/photo-1617469767053-d3b523a0b982?auto=format&fit=crop&w=1200&q=85", badge: "Premium", description: "MPV premium untuk perjalanan keluarga dengan kenyamanan ekstra." },
 ];
 
-const bikes: Vehicle[] = [
-  { name: "Honda Beat", type: "Matic Harian", price: "Rp18 jutaan", emoji: "🛵", color: "from-emerald-100 to-teal-50" },
-  { name: "Honda Vario", type: "Matic Sporty", price: "Rp24 jutaan", emoji: "🏍️", color: "from-orange-100 to-amber-50" },
-  { name: "Yamaha NMAX", type: "Maxi Scooter", price: "Rp32 jutaan", emoji: "🏍️", color: "from-indigo-100 to-blue-50" },
-];
-
-function whatsappUrl(message: string) {
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-}
-
-function WhatsAppLink({
-  children,
-  message,
-  className = "",
-}: {
-  children: React.ReactNode;
-  message: string;
-  className?: string;
-}) {
-  return (
-    <a
-      href={whatsappUrl(message)}
-      target="_blank"
-      rel="noreferrer"
-      className={`inline-flex items-center justify-center gap-2 rounded-full bg-emerald-500 px-6 py-3.5 font-bold text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:bg-emerald-600 ${className}`}
-    >
-      {children}
-    </a>
-  );
-}
+const money = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(value);
+const wa = (message: string) => `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 
 export default function Home() {
-  const [category, setCategory] = useState<"mobil" | "motor">("mobil");
-  const vehicles = category === "mobil" ? cars : bikes;
+  const [filter, setFilter] = useState("Semua");
+  const [selectedCar, setSelectedCar] = useState<Car | null>(null);
+  const [search, setSearch] = useState("");
+  const filteredCars = useMemo(() => cars.filter((car) => (filter === "Semua" || car.category === filter) && car.name.toLowerCase().includes(search.toLowerCase())), [filter, search]);
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#f8fafc] text-slate-900">
-      <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur-xl">
+    <main className="min-h-screen bg-[#f7f7f5] text-[#17201d]">
+      <div className="bg-[#17201d] px-4 py-2 text-center text-xs font-semibold tracking-wide text-white">WEBSITE DEMO SALES MOBIL · DATA UNIT & HARGA HANYA ILUSTRASI</div>
+      <header className="sticky top-0 z-30 border-b border-black/5 bg-[#f7f7f5]/95 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
-          <a href="#" className="text-xl font-black tracking-tight">
-            SALES<span className="text-blue-600">LEADS.</span>
-          </a>
-          <nav className="hidden items-center gap-7 text-sm font-semibold text-slate-600 md:flex">
-            <a href="#fitur" className="hover:text-blue-600">Keunggulan</a>
-            <a href="#demo" className="hover:text-blue-600">Demo Website</a>
-            <a href="#harga" className="hover:text-blue-600">Harga</a>
-          </nav>
-          <WhatsAppLink message="Halo, saya ingin konsultasi website untuk sales kendaraan." className="px-4 py-3 text-sm">
-            Konsultasi ↗
-          </WhatsAppLink>
+          <a href="#home" className="text-xl font-black tracking-tight">GARASI<span className="text-emerald-700">PRIMA.</span><span className="ml-2 rounded bg-emerald-100 px-2 py-1 text-[9px] font-extrabold tracking-widest text-emerald-900">DEMO</span></a>
+          <nav className="hidden items-center gap-7 text-sm font-semibold text-slate-600 md:flex"><a href="#katalog" className="hover:text-emerald-800">Katalog Mobil</a><a href="#layanan" className="hover:text-emerald-800">Layanan</a><a href="#tentang" className="hover:text-emerald-800">Tentang Sales</a></nav>
+          <a href={wa("Halo, saya ingin konsultasi tentang unit mobil di demo Garasi Prima.")} target="_blank" rel="noreferrer" className="rounded-full bg-emerald-800 px-4 py-3 text-sm font-bold text-white transition hover:bg-emerald-700">Chat Sales ↗</a>
         </div>
       </header>
 
-      <section className="relative isolate">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_#dbeafe,_transparent_55%)]" />
-        <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 py-16 md:py-24 lg:grid-cols-2 lg:px-8">
-          <div>
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-4 py-2 text-xs font-bold text-blue-700 shadow-sm">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              KHUSUS SALES MOBIL & MOTOR
-            </div>
-            <h1 className="max-w-2xl text-4xl font-black leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl">
-              Bantu calon pembeli menemukan{" "}
-              <span className="text-blue-600">kendaraan impian</span> kamu.
-            </h1>
-            <p className="mt-6 max-w-xl text-base leading-7 text-slate-600 sm:text-lg">
-              Punya website katalog profesional, tampilkan promo kendaraan,
-              dan arahkan calon pembeli langsung ke WhatsApp kamu.
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <WhatsAppLink message="Halo, saya ingin melihat demo website sales mobil dan motor.">
-                💬 Lihat Demo Gratis
-              </WhatsAppLink>
-              <a href="#demo" className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-3.5 font-bold transition hover:border-blue-400">
-                Jelajahi Katalog ↓
-              </a>
-            </div>
-            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm text-slate-600">
-              <span>✓ Mobile friendly</span>
-              <span>✓ Tombol WhatsApp</span>
-              <span>✓ Siap dipromosikan</span>
-            </div>
-          </div>
-
-          <div className="relative mx-auto w-full max-w-lg">
-            <div className="absolute -inset-5 -z-10 rounded-[2.5rem] bg-blue-200/50 blur-3xl" />
-            <div className="rounded-[2rem] border border-white bg-white p-4 shadow-2xl shadow-blue-900/10 sm:p-6">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-blue-600">Katalog kendaraan</p>
-                  <p className="mt-1 text-xl font-black">Temukan unit pilihanmu</p>
-                </div>
-                <span className="rounded-xl bg-blue-50 p-3 text-2xl">🚘</span>
-              </div>
-              <div className="mt-5 grid grid-cols-2 gap-3">
-                <button onClick={() => setCategory("mobil")} className={`rounded-xl px-4 py-3 text-sm font-bold transition ${category === "mobil" ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600"}`}>🚗 Mobil</button>
-                <button onClick={() => setCategory("motor")} className={`rounded-xl px-4 py-3 text-sm font-bold transition ${category === "motor" ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600"}`}>🏍️ Motor</button>
-              </div>
-              <div className="mt-4 space-y-3">
-                {vehicles.map((vehicle) => (
-                  <div key={vehicle.name} className="flex items-center gap-3 rounded-2xl border border-slate-100 p-3 transition hover:border-blue-200">
-                    <div className={`flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${vehicle.color} text-4xl`}>{vehicle.emoji}</div>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-extrabold">{vehicle.name}</p>
-                      <p className="mt-1 text-xs text-slate-500">{vehicle.type}</p>
-                      <p className="mt-2 text-sm font-black text-blue-700">{vehicle.price}</p>
-                    </div>
-                    <a aria-label={`Tanya ${vehicle.name} via WhatsApp`} href={whatsappUrl(`Halo, saya tertarik dengan ${vehicle.name}. Apakah unitnya tersedia?`)} target="_blank" rel="noreferrer" className="rounded-full bg-emerald-500 px-3 py-2 text-xs font-bold text-white">Chat WA</a>
-                  </div>
-                ))}
-              </div>
-              <p className="mt-4 text-center text-xs text-slate-400">Contoh tampilan demo · Harga hanya ilustrasi</p>
-            </div>
-          </div>
+      <section id="home" className="relative isolate overflow-hidden bg-[#17201d] text-white">
+        <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(13,25,20,.95)_0%,rgba(13,25,20,.78)_48%,rgba(13,25,20,.2)_100%)]" />
+        <div className="absolute inset-0 -z-20 bg-cover bg-center opacity-80" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=2000&q=90')" }} />
+        <div className="mx-auto grid min-h-[560px] max-w-7xl items-center gap-10 px-5 py-20 lg:grid-cols-[1.1fr_.9fr] lg:px-8">
+          <div className="max-w-2xl"><span className="inline-flex rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[.18em] text-emerald-200">Partner kendaraan pilihan Anda</span><h1 className="mt-6 text-4xl font-black leading-[1.05] tracking-tight sm:text-6xl">Temukan mobil yang pas untuk <span className="text-emerald-300">perjalanan berikutnya.</span></h1><p className="mt-6 max-w-xl text-base leading-7 text-white/75 sm:text-lg">Pilihan mobil keluarga dan harian, informasi unit yang jelas, serta konsultasi langsung dengan sales melalui WhatsApp.</p><div className="mt-8 flex flex-col gap-3 sm:flex-row"><a href="#katalog" className="rounded-full bg-emerald-400 px-6 py-4 text-center font-extrabold text-[#14231c] transition hover:bg-emerald-300">Jelajahi Katalog Mobil ↓</a><a href={wa("Halo, saya ingin dibantu memilih mobil yang sesuai kebutuhan dan budget saya.")} target="_blank" rel="noreferrer" className="rounded-full border border-white/30 bg-white/10 px-6 py-4 text-center font-bold text-white transition hover:bg-white/20">Konsultasi via WhatsApp ↗</a></div><div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm text-white/70"><span>✓ Konsultasi personal</span><span>✓ Pilihan berbagai tipe</span><span>✓ Respons via WhatsApp</span></div></div>
+          <div className="hidden lg:block"><div className="ml-auto max-w-sm rounded-3xl border border-white/15 bg-white/10 p-6 backdrop-blur-md"><p className="text-xs font-bold uppercase tracking-[.2em] text-emerald-200">Bantuan memilih mobil</p><h2 className="mt-3 text-2xl font-extrabold">Punya kebutuhan khusus?</h2><p className="mt-3 text-sm leading-6 text-white/70">Ceritakan budget dan kebutuhanmu. Sales demo kami siap membantu memberikan gambaran pilihan unit.</p><a className="mt-6 inline-flex rounded-full bg-white px-5 py-3 text-sm font-extrabold text-[#17201d]" href={wa("Halo, budget saya ... dan saya sedang mencari mobil untuk kebutuhan ...")} target="_blank" rel="noreferrer">Tanya rekomendasi mobil ↗</a></div></div>
         </div>
       </section>
 
-      <section id="fitur" className="border-y border-slate-200 bg-white py-16">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-sm font-black uppercase tracking-widest text-blue-600">Bukan sekadar website</p>
-            <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Bantu promosi kendaraan jadi lebih profesional.</h2>
-            <p className="mt-4 leading-7 text-slate-600">Satu halaman khusus untuk menampilkan unit dan memudahkan calon pembeli menghubungi kamu.</p>
-          </div>
-          <div className="mt-10 grid gap-5 md:grid-cols-3">
-            {[
-              ["▦", "Katalog kendaraan", "Tampilkan pilihan unit, harga indikatif, promo, dan informasi kendaraan."],
-              ["↗", "Terhubung ke WhatsApp", "Setiap tombol mengarahkan calon pembeli ke percakapan dengan sales."],
-              ["◎", "Siap untuk Meta Ads", "Landing page dirancang sebagai tujuan iklan Facebook dan Instagram."],
-            ].map(([icon, title, description]) => (
-              <article key={title} className="rounded-3xl border border-slate-200 bg-slate-50 p-7">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-2xl font-bold text-white">{icon}</div>
-                <h3 className="mt-5 text-xl font-black">{title}</h3>
-                <p className="mt-3 leading-7 text-slate-600">{description}</p>
-              </article>
-            ))}
-          </div>
-        </div>
+      <section id="katalog" className="mx-auto max-w-7xl px-5 py-16 sm:py-20 lg:px-8"><div className="flex flex-col justify-between gap-6 md:flex-row md:items-end"><div><p className="text-xs font-black uppercase tracking-[.2em] text-emerald-800">Pilihan unit</p><h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Cari mobil yang cocok buat kamu.</h2><p className="mt-3 max-w-xl leading-7 text-slate-600">Pilih kategori atau cari model mobil untuk melihat detail unit demo.</p></div><div className="w-full md:max-w-xs"><label htmlFor="car-search" className="mb-2 block text-sm font-bold">Cari model mobil</label><input id="car-search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Contoh: Avanza" className="w-full rounded-full border border-slate-300 bg-white px-5 py-3 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-700/10" /></div></div>
+        <div className="mt-7 flex flex-wrap gap-2">{["Semua", "MPV", "City Car", "SUV"].map((item) => <button key={item} onClick={() => setFilter(item)} className={`rounded-full px-5 py-2.5 text-sm font-bold transition ${filter === item ? "bg-[#17201d] text-white" : "border border-slate-300 bg-white text-slate-600 hover:border-emerald-700"}`}>{item}</button>)}</div>
+        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{filteredCars.map((car) => <article key={car.id} className="group overflow-hidden rounded-3xl border border-black/5 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl"><div className="relative h-56 overflow-hidden bg-slate-200"><img src={car.image} alt={`${car.name} - foto ilustrasi`} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" loading="lazy"/><span className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1.5 text-[11px] font-extrabold text-slate-800">{car.badge ?? "Unit pilihan"}</span><span className="absolute bottom-3 right-3 rounded-full bg-[#17201d]/85 px-3 py-1.5 text-[10px] font-bold text-white">FOTO ILUSTRASI</span></div><div className="p-5"><p className="text-xs font-bold uppercase tracking-widest text-emerald-800">{car.category} · {car.year}</p><h3 className="mt-2 text-xl font-black">{car.name}</h3><p className="mt-2 text-2xl font-black tracking-tight text-emerald-900">{money(car.price)}</p><div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-slate-500"><span className="rounded-lg bg-slate-100 px-2.5 py-2">{car.mileage}</span><span className="rounded-lg bg-slate-100 px-2.5 py-2">{car.transmission}</span><span className="rounded-lg bg-slate-100 px-2.5 py-2">{car.fuel}</span></div><div className="mt-5 grid grid-cols-2 gap-2"><button onClick={() => setSelectedCar(car)} className="rounded-full border border-slate-300 px-3 py-3 text-sm font-bold transition hover:border-emerald-800 hover:text-emerald-900">Detail Unit</button><a href={wa(`Halo, saya tertarik dengan ${car.name} tahun ${car.year} yang tercantum pada demo. Apakah boleh minta info lebih lanjut?`)} target="_blank" rel="noreferrer" className="rounded-full bg-emerald-800 px-3 py-3 text-center text-sm font-bold text-white transition hover:bg-emerald-700">Tanya via WA ↗</a></div></div></article>)}</div>
+        {filteredCars.length === 0 && <p className="mt-10 rounded-2xl bg-white p-8 text-center text-slate-500">Model belum ditemukan. Coba kata kunci lain.</p>}
+        <p className="mt-6 text-xs leading-5 text-slate-500">* Seluruh unit, foto, harga, tahun, dan kilometer di halaman ini hanya contoh ilustrasi untuk demo. Stok dan spesifikasi nyata harus dikonfirmasi kepada penjual.</p>
       </section>
 
-      <section id="demo" className="py-16 sm:py-20">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8">
-          <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
-            <div>
-              <p className="text-sm font-black uppercase tracking-widest text-blue-600">Preview produk</p>
-              <h2 className="mt-3 text-3xl font-black sm:text-4xl">Demo katalog kendaraan</h2>
-              <p className="mt-3 text-slate-600">Lihat gambaran website yang bisa disesuaikan dengan identitas sales kamu.</p>
-            </div>
-            <WhatsAppLink message="Halo, saya ingin dibuatkan website katalog kendaraan seperti demo.">Minta Demo Personal ↗</WhatsAppLink>
-          </div>
-          <div className="mt-8 grid gap-5 sm:grid-cols-2">
-            <article className="rounded-3xl bg-slate-950 p-7 text-white sm:p-9">
-              <span className="text-4xl">🚙</span>
-              <p className="mt-5 text-sm font-bold uppercase tracking-widest text-blue-300">Demo 01</p>
-              <h3 className="mt-2 text-2xl font-black">Website Sales Mobil</h3>
-              <p className="mt-3 leading-7 text-slate-300">Halaman promo mobil, katalog unit, informasi kredit, dan tombol konsultasi WhatsApp.</p>
-              <a href="#harga" className="mt-6 inline-flex rounded-full bg-white px-5 py-3 font-bold text-slate-950 hover:bg-blue-100">Lihat Paket →</a>
-            </article>
-            <article className="rounded-3xl bg-blue-600 p-7 text-white sm:p-9">
-              <span className="text-4xl">🏍️</span>
-              <p className="mt-5 text-sm font-bold uppercase tracking-widest text-blue-100">Demo 02</p>
-              <h3 className="mt-2 text-2xl font-black">Website Sales Motor</h3>
-              <p className="mt-3 leading-7 text-blue-50">Katalog motor, informasi promo, pilihan unit, dan jalur chat langsung ke sales.</p>
-              <a href="#harga" className="mt-6 inline-flex rounded-full bg-white px-5 py-3 font-bold text-blue-700 hover:bg-blue-50">Lihat Paket →</a>
-            </article>
-          </div>
-        </div>
-      </section>
+      <section id="layanan" className="border-y border-black/5 bg-white py-16 sm:py-20"><div className="mx-auto max-w-7xl px-5 lg:px-8"><div className="max-w-2xl"><p className="text-xs font-black uppercase tracking-[.2em] text-emerald-800">Layanan sales</p><h2 className="mt-3 text-3xl font-black sm:text-4xl">Dari cari unit sampai konsultasi.</h2></div><div className="mt-9 grid gap-5 md:grid-cols-3">{[["01", "Konsultasi kebutuhan", "Ceritakan budget, tipe mobil, dan kebutuhan perjalanan kamu."], ["02", "Informasi unit", "Lihat detail dasar kendaraan dan tanyakan ketersediaan langsung ke sales."], ["03", "Hubungi sales", "Mulai percakapan WhatsApp dengan pesan yang sesuai pilihan mobil."]].map(([num, title, desc]) => <article key={num} className="rounded-3xl bg-[#f7f7f5] p-7"><span className="text-sm font-black text-emerald-800">{num}</span><h3 className="mt-4 text-xl font-black">{title}</h3><p className="mt-3 leading-7 text-slate-600">{desc}</p></article>)}</div></div></section>
 
-      <section id="harga" className="bg-slate-950 py-16 text-white sm:py-20">
-        <div className="mx-auto max-w-5xl px-5 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-sm font-black uppercase tracking-widest text-blue-300">Harga perkenalan</p>
-            <h2 className="mt-3 text-3xl font-black sm:text-4xl">Mulai bangun promosi digitalmu.</h2>
-            <p className="mt-4 leading-7 text-slate-300">Website katalog yang dirancang untuk membantu sales tampil lebih profesional.</p>
-          </div>
-          <div className="mx-auto mt-9 max-w-lg rounded-3xl border border-slate-700 bg-slate-900 p-7 sm:p-9">
-            <p className="font-bold text-blue-300">PAKET WEBSITE KATALOG</p>
-            <div className="mt-4 flex items-end gap-2">
-              <span className="text-5xl font-black tracking-tight">Rp699.000</span>
-              <span className="pb-2 text-sm text-slate-400">/ sekali bayar</span>
-            </div>
-            <p className="mt-3 text-sm text-slate-400">Biaya iklan Meta Ads tidak termasuk.</p>
-            <ul className="mt-7 space-y-4 text-sm text-slate-200">
-              {["Landing page katalog kendaraan", "Tampilan mobile friendly", "Tombol WhatsApp untuk prospek", "Informasi promo dan unit", "Panduan penggunaan website"].map((feature) => (
-                <li key={feature} className="flex gap-3"><span className="font-black text-emerald-400">✓</span>{feature}</li>
-              ))}
-            </ul>
-            <div className="mt-8">
-              <WhatsAppLink message="Halo, saya tertarik dengan Paket Website Katalog Rp699.000 untuk sales mobil/motor. Boleh minta demo dan detail paketnya?">
-                Konsultasi via WhatsApp ↗
-              </WhatsAppLink>
-            </div>
-            <p className="mt-4 text-xs leading-5 text-slate-400">Rincian fitur, biaya domain/hosting, dan ketentuan pengerjaan dikonfirmasi sebelum pemesanan.</p>
-          </div>
-        </div>
-      </section>
+      <section id="tentang" className="mx-auto grid max-w-7xl gap-10 px-5 py-16 sm:py-20 md:grid-cols-[.8fr_1.2fr] md:items-center lg:px-8"><div className="rounded-3xl bg-emerald-950 p-8 text-white sm:p-10"><p className="text-xs font-bold uppercase tracking-[.2em] text-emerald-300">Sales personal · Demo</p><h2 className="mt-4 text-3xl font-black">Butuh bantuan memilih kendaraan?</h2><p className="mt-4 leading-7 text-white/70">Hubungi sales untuk berdiskusi tentang pilihan unit yang sesuai kebutuhan dan anggaran.</p><a href={wa("Halo, saya ingin konsultasi pilihan mobil yang sesuai kebutuhan saya.")} target="_blank" rel="noreferrer" className="mt-7 inline-flex rounded-full bg-emerald-400 px-5 py-3.5 font-extrabold text-emerald-950">Mulai chat WhatsApp ↗</a></div><div><p className="text-xs font-black uppercase tracking-[.2em] text-emerald-800">Tentang demo</p><h2 className="mt-3 text-3xl font-black sm:text-4xl">Contoh website untuk sales mobil independen.</h2><p className="mt-5 leading-7 text-slate-600">Demo ini menunjukkan bagaimana seorang sales dapat memiliki halaman profesional untuk memperkenalkan unit, menampilkan informasi penting, dan memudahkan calon pembeli memulai percakapan. Identitas, foto, stok, harga, dan nomor kontak dapat disesuaikan saat website dibuat untuk klien.</p><div className="mt-6 grid gap-3 sm:grid-cols-2"><div className="rounded-2xl border border-slate-200 p-4"><p className="font-extrabold">Tampilan mobile</p><p className="mt-1 text-sm text-slate-500">Dibuat responsif untuk pengunjung HP.</p></div><div className="rounded-2xl border border-slate-200 p-4"><p className="font-extrabold">WhatsApp terhubung</p><p className="mt-1 text-sm text-slate-500">CTA mengarah ke nomor demo.</p></div></div></div></section>
 
-      <footer className="bg-white px-5 py-8 text-center text-sm text-slate-500">
-        <p className="font-black tracking-tight text-slate-900">SALES<span className="text-blue-600">LEADS.</span></p>
-        <p className="mt-2">Website katalog kendaraan · Website & digital marketing</p>
-        <p className="mt-2">© {new Date().getFullYear()} SalesLeads. Demo website.</p>
-      </footer>
+      <section className="bg-[#17201d] px-5 py-16 text-white sm:py-20"><div className="mx-auto max-w-4xl text-center"><p className="text-xs font-black uppercase tracking-[.2em] text-emerald-300">Ingin website seperti ini?</p><h2 className="mt-4 text-3xl font-black sm:text-5xl">Bawa katalog kendaraanmu ke level berikutnya.</h2><p className="mx-auto mt-5 max-w-2xl leading-7 text-white/70">Demo ini bisa disesuaikan dengan nama sales, unit kendaraan, foto, promo, dan kontak bisnis kamu.</p><a href={wa("Halo, saya melihat demo website sales mobil. Saya ingin tahu paket pembuatan website seharga Rp699.000.")} target="_blank" rel="noreferrer" className="mt-8 inline-flex rounded-full bg-emerald-400 px-7 py-4 font-extrabold text-emerald-950 transition hover:bg-emerald-300">Konsultasi Website Rp699.000 ↗</a><p className="mt-4 text-xs text-white/50">Demo produk · Nomor kontak dan data kendaraan masih contoh.</p></div></section>
+
+      <footer className="px-5 py-7 text-center text-xs text-slate-500"><p className="font-black tracking-wide text-slate-800">GARASIPRIMA. <span className="font-medium">WEBSITE DEMO</span></p><p className="mt-2">Template contoh website personal sales mobil · © {new Date().getFullYear()}</p></footer>
+
+      {selectedCar && <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-5" role="dialog" aria-modal="true" aria-label={`Detail ${selectedCar.name}`} onClick={() => setSelectedCar(null)}><div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-t-3xl bg-white sm:rounded-3xl" onClick={(e) => e.stopPropagation()}><img src={selectedCar.image} alt={`${selectedCar.name} foto ilustrasi`} className="h-56 w-full object-cover sm:h-72"/><div className="p-6 sm:p-8"><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-widest text-emerald-800">{selectedCar.category} · {selectedCar.year}</p><h2 className="mt-2 text-2xl font-black">{selectedCar.name}</h2><p className="mt-2 text-2xl font-black text-emerald-900">{money(selectedCar.price)}</p></div><button onClick={() => setSelectedCar(null)} aria-label="Tutup detail" className="rounded-full bg-slate-100 px-3 py-2 font-bold">✕</button></div><p className="mt-4 leading-7 text-slate-600">{selectedCar.description}</p><div className="mt-4 flex flex-wrap gap-2 text-sm"><span className="rounded-lg bg-slate-100 px-3 py-2">{selectedCar.mileage}</span><span className="rounded-lg bg-slate-100 px-3 py-2">{selectedCar.transmission}</span><span className="rounded-lg bg-slate-100 px-3 py-2">{selectedCar.fuel}</span></div><p className="mt-4 text-xs text-slate-500">Foto dan spesifikasi merupakan ilustrasi demo.</p><a href={wa(`Halo, saya ingin bertanya detail ${selectedCar.name} tahun ${selectedCar.year} dari demo website.`)} target="_blank" rel="noreferrer" className="mt-6 flex justify-center rounded-full bg-emerald-800 px-5 py-4 font-extrabold text-white">Tanya unit ini via WhatsApp ↗</a></div></div></div>}
     </main>
   );
 }
